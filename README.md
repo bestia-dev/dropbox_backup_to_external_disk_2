@@ -4,29 +4,37 @@
 
 [//]: # (auto_cargo_toml_to_md start)
 
-**TUI one way sync from dropbox to external disc**  
-***version: 2023.820.1613 date: 2023-08-20 author: [bestia.dev](https://bestia.dev) repository: [Github](https://github.com/bestia-dev/dropbox_backup_to_external_disk/)***  
+**TUI and CLI, one way sync from dropbox to external disc**  
+***version: 2023.820.1613 date: 2023-08-20 author: [bestia.dev](https://bestia.dev) repository: [Github](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/)***  
 
 [//]: # (auto_cargo_toml_to_md end)
 
 ![status](https://img.shields.io/badge/maintained-green) 
-![status](https://img.shields.io/badge/ready_for_use-green) 
+![status](https://img.shields.io/badge/work_in_progress-yellow) 
 
 [//]: # (auto_lines_of_code start)
-[![Lines in Rust code](https://img.shields.io/badge/Lines_in_Rust-1549-green.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk/)
-[![Lines in Doc comments](https://img.shields.io/badge/Lines_in_Doc_comments-280-blue.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk/)
-[![Lines in Comments](https://img.shields.io/badge/Lines_in_comments-182-purple.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk/)
-[![Lines in examples](https://img.shields.io/badge/Lines_in_examples-0-yellow.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk/)
-[![Lines in tests](https://img.shields.io/badge/Lines_in_tests-0-orange.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk/)
+[![Lines in Rust code](https://img.shields.io/badge/Lines_in_Rust-1549-green.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/)
+[![Lines in Doc comments](https://img.shields.io/badge/Lines_in_Doc_comments-280-blue.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/)
+[![Lines in Comments](https://img.shields.io/badge/Lines_in_comments-182-purple.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/)
+[![Lines in examples](https://img.shields.io/badge/Lines_in_examples-0-yellow.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/)
+[![Lines in tests](https://img.shields.io/badge/Lines_in_tests-0-orange.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/)
 
 [//]: # (auto_lines_of_code end)
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk/blob/main/LICENSE)
-[![Rust](https://github.com/bestia-dev/dropbox_backup_to_external_disk/workflows/RustAction/badge.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/blob/main/LICENSE)
+[![Rust](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/workflows/RustAction/badge.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/)
 ![Hits](https://bestia.dev/webpage_hit_counter/get_svg_image/584868797.svg)
 
-Hashtags: #rustlang #tutorial #dropbox #cli  
+Hashtags: #rustlang #tutorial #dropbox #cli #tui  
 My projects on Github are more like a tutorial than a finished product: [bestia-dev tutorials](https://github.com/bestia-dev/tutorials_rust_wasm).
+
+## Version 2
+
+The second version will have both CLI and TUI interfaces.
+The interface will be on the main thread, everything else will work in separate threads. That will create a mandatory separation of logic and user interface.  
+I choose the [ratatui](https://github.com/ratatui-org/ratatui) crate for the TUI interface.  
+TODO: Later I could use the crate [sled](https://github.com/spacejam/sled) to store data.  
+TODO: make it cross-platform for Linux and Windows.
 
 ## Motivation
 
@@ -38,71 +46,61 @@ The original Dropbox Sync app works great for the internal HD, but is "not recom
 - dropbox_uploader
 
 But I wanted to write something mine for fun, learning Rust and using my own apps.
-I have a lot of files, so I wanted to list them first - remote and local. Then compare the lists and finally download the files.  
+I have a lot of files, so I want to list them first - remote and local. Then compare the lists and finally download the files.  
 Obsolete files will "move to trash folder", so I can inspect what and how to delete manually.  
 The dropbox remote storage will always be read_only, nothing will be modified there, never, no permission for that.  
 
 ## Try it
 
 There are a few manual steps for the security of you files on Dropbox. Authentication on internet is a complex topic.  
-You should be logged in Linux terminal (also in WSL2) with your account. So things you do, are not visible to others. You will set some local environment variables that are private/secret to your linux Session.  After you logout from you Linux session these local environment variables will be deleted.  
-The executable will create a sub-directory `temp_data` in the current directory. Maybe it is best if you create a dedicated directory `~/dropbox_backup_to_external_disk/` just for this executable.
-Download the latest release from [Github](https://github.com/bestia-dev/dropbox_backup_to_external_disk/releases) and make the file executable and enable auto-completion:
+You should be logged in Linux terminal (also in WSL2) with your account. So things you do in that session, are not visible to others. You will set some local environment variables that are private/secret to your linux Session.  After you logout from you Linux session these local environment variables will be deleted.  
+The executable will create a sub-directory `temp_data` in the current directory. Maybe it is best if you create a dedicated directory `~/dropbox_backup_to_external_disk/` just for this executable and temp_data.
+Download the latest release from [Github](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/releases) and make the file executable and enable auto-completion:
 
 ```bash
 cd ~
 mkdir dropbox_backup_to_external_disk
 cd dropbox_backup_to_external_disk
 
-curl -L https://github.com/bestia-dev/dropbox_backup_to_external_disk/releases/latest/download/dropbox_backup_to_external_disk --output dropbox_backup_to_external_disk
+curl -L https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/releases/latest/download/dropbox_backup_to_external_disk --output dropbox_backup_to_external_disk
 
 chmod +x dropbox_backup_to_external_disk
 alias dropbox_backup_to_external_disk=./dropbox_backup_to_external_disk
 complete -C "dropbox_backup_to_external_disk completion" dropbox_backup_to_external_disk
-dropbox_backup_to_external_disk --help
+
+dropbox_backup_to_external_disk
 ```
 
-Run the executable with --help and follow carefully the instructions 1. and 2.  
-
-![screenshot_1](https://github.com/bestia-dev/dropbox_backup_to_external_disk/raw/main/images/screenshot_1.png "screenshot_1") ![screenshot_2](https://github.com/bestia-dev/dropbox_backup_to_external_disk/raw/main/images/screenshot_2.png "screenshot_2") ![list_2](https://github.com/bestia-dev/dropbox_backup_to_external_disk/raw/main/images/list_2.png "list_2") ![list_3](https://github.com/bestia-dev/dropbox_backup_to_external_disk/raw/main/images/list_3.png "list_3") ![list_4](https://github.com/bestia-dev/dropbox_backup_to_external_disk/raw/main/images/list_4.png "list_4")
+Run the executable without arguments and follow carefully the instructions.  
 
 ## Warning
 
 I don't know why, but WSL2 sometimes does not see all the folders of the external disk.  
 Instead of 12.000 folders it sees only 28 ???  
 Be careful !  
+Check it first with this commands to see if the removable disk is really mounted or you see a phantom cached file system.  
+
+```bash
+ls /mnt/d
+# and/or
+df
+```
+
 I then restart my Win10 and the problem magically disappears.
-
-## remove empty folders
-
-In powershell if you give the same folder twice like this:  
-`robocopy "f:\DropBoxBackup2" "f:\DropBoxBackup2" /S /move`  
-it will remove empty folders.  
-Warning: the folders must be identical !  
 
 ## Development
 
-I use [cargo-auto](https://crates.io/crates/cargo-auto) for automation tasks in rust language. Install it:
+I develop in my container image for Rust development inside WSL2 Debian Linux inside Win10. All this is described in my project [docker_rust_development](https://github.com/bestia-dev/docker_rust_development).  
+I use [cargo-auto](https://crates.io/crates/cargo-auto) for automation tasks in Rust language.  
 
-```bash
-cargo install cargo-auto
-```
-
-List user-defined automation tasks in `automation_tasks_rs`:
-
-```bash
-cargo auto
-```
-
-![cargo_auto_1](https://github.com/bestia-dev/dropbox_backup_to_external_disk/raw/main/images/cargo_auto_1.png "cargo_auto_1")
-
-I use WSL2 (Debian) on Win10 to develope and execute this CLI in Debian Linux.  
+Then I use WSL2 (Debian) on Win10 to execute the compiled program.  
 The external disk path from WSL2 looks like this: `/mnt/d/DropBoxBackup1`.  
 The CLI saves the list of the local files metadata in `temp_data/list_destination_files.csv`.  
 And the list of the files metadata from the remote Dropbox to in `temp_data/list_source_files.csv`.
 Tab delimited with metadata: path (with name), datetime modified, size.
 The remote path is not really case-sensitive. They try to make it case-preserve, but this apply only to the last part of the path. Before that it is random-case.
 For big dropbox remotes it can take a while to complete. After the first level folders are listed, I use 3 threads in a ThreadPool to get sub-folders recursively in parallel. It makes it much faster. Also the download of files is in parallel on multiple threads.  
+TODO: If possible copy the local file that is synced with Dropbox instead of download.  
 The sorting of lists is also done in parallel with the crate Rayon.  
 Once the lists are complete the CLI will compare them and create files:  
 `list_for_correct_time.csv`  
@@ -124,16 +122,16 @@ For Rust there is this quasi official project:
 
 Authorization on the internet is a mess. Dropbox api uses OAuth2.
 Every app must be authorized on Dropbox and have its own `app key` and `app secret`.  
-For commercial programs they probably embed them into the binary code somehow. But for OpenSource projects it is not possible to keep a secret. So the workaround is: every user must create a new `dropbox app` exclusive only to him. Creating a new app is simple. This app will stay forever in `development status` in dropbox, to be more private and secure. The  
+For commercial programs they probably embed them into the binary code somehow. But for OpenSource projects it is not possible to keep a secret. So the workaround is: every user must create its own new `dropbox app` exclusive only to him. Creating a new app is simple. This app will stay forever in `development status` in dropbox, to be more private and secure. The  
 `$ dropbox_backup_to_external_disk --help`  
 has the detailed instructions.  
 Then every time before use we need generate the "short-lived access token" for security reasons. There is the possibility to choose "no expiration" token, but I don't like it. Dropbox backup is used rarely and it is not super frustrating to make few clicks for security of your precious files. Having a "no expiration" token is like having another password for the hackers to try to hack. I like more the "short-lived" token. When I'm not using this backup program, there is no access token at all.  
-![dropbox_2](https://github.com/bestia-dev/dropbox_backup_to_external_disk/raw/main/images/dropbox_2.png "dropbox_2") ![dropbox_1](https://github.com/bestia-dev/dropbox_backup_to_external_disk/raw/main/images/dropbox_1.png "dropbox_1")
+![dropbox_2](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/raw/main/images/dropbox_2.png "dropbox_2") ![dropbox_1](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/raw/main/images/dropbox_1.png "dropbox_1")
 
 ## rename or move
 
 Often a file is renamed or moved to another folder.  
-I can try to recognize if there is the same file in list_for_trash and list_for download.  
+I can try to recognize if there is the same file in list_for_trash and list_for_download.  
 If the name, size and file date are equal then they are probably the same file.  
 If the name is different, then try if content_hash is equal, but that is slow.  
 
@@ -189,16 +187,7 @@ Then a new `compare_files` will generate a new list if there are smaller differe
 Is there a limit in the api for file size bigger than 2GB? Why the program crashes without an error?
 Files with size 0 are not downloaded.
 Solve empty folders in the program.
-Make a command inside the program to save the oauth_token. 
-
-## cargo crev reviews and advisory
-
-We leave in times of danger with [supply chain attacks](https://en.wikipedia.org/wiki/Supply_chain_attack).  
-It is recommended to always use [cargo-crev](https://github.com/crev-dev/cargo-crev)  
-to verify the trustworthiness of each of your dependencies.  
-Please, spread this info.  
-You can also read reviews quickly on the web. Example for the crate `num-traits`:  
-<https://web.crev.dev/rust-reviews/crate/num-traits/>  
+Make a command inside the program to save the oauth_token.  
 
 ## Open-source and free as a beer
 
