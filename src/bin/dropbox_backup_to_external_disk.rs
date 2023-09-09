@@ -5,8 +5,9 @@
 // But to be interactive I cannot wait for a lib function to finish. The lib functions should be in another thread.
 // Then send msg to the bin  main thread that print that to the screen.
 
+use crossterm::{terminal, ExecutableCommand};
 use dropbox_backup_to_external_disk::*;
-use std::env;
+use std::{env, io::Write};
 
 // define paths in bin, not in lib
 static APP_CONFIG: AppConfig = AppConfig {
@@ -24,13 +25,17 @@ static APP_CONFIG: AppConfig = AppConfig {
     path_list_for_create_folders: "temp_data/list_for_create_folders.csv",
 };
 
-fn main() {
+fn main() -> std::io::Result<()> {
     pretty_env_logger::init();
-    ctrlc::set_handler(move || {
+    /*     ctrlc::set_handler(move || {
         println!("terminated with ctrl+c. {}", *UNHIDE_CURSOR);
         std::process::exit(exitcode::OK);
     })
-    .expect("Error setting Ctrl-C handler");
+    .expect("Error setting Ctrl-C handler"); */
+
+    let mut stdout = std::io::stdout();
+    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
+    stdout.flush()?;
 
     //create the directory temp_data/
     std::fs::create_dir_all("temp_data").unwrap();
@@ -44,7 +49,7 @@ fn main() {
     match env::args().nth(1).as_deref() {
         None | Some("--help") | Some("-h") => print_help(),
         Some("completion") => completion(),
-        Some("test") => {
+        /*    Some("test") => {
             let ns_started = ns_start("test");
             test_connection();
             ns_print_ms("test", ns_started);
@@ -166,10 +171,12 @@ fn main() {
         Some("one_file_download") => match env::args().nth(2).as_deref() {
             Some(path) => download_one_file(path, &APP_CONFIG),
             _ => println!("Unrecognized arguments. Try `dropbox_backup_to_external_disk --help`"),
-        },
+        }, */
         _ => println!("Unrecognized arguments. Try `dropbox_backup_to_external_disk --help`"),
     }
     // TODO: receive msg from other threads
+
+    Ok(())
 }
 
 /// sub-command for bash auto-completion of `cargo auto` using the crate `dev_bestia_cargo_completion`
@@ -313,9 +320,9 @@ fn print_help() {
 
   Visit open-source repository: https://github.com/bestia-dev/dropbox_backup_to_external_disk
     "#,
-        g = *GREEN,
-        y = *YELLOW,
-        rs = *RESET,
+        g = "",
+        y = "",
+        rs = "",
         path_list_source_files = APP_CONFIG.path_list_source_files,
         path_list_destination_files = APP_CONFIG.path_list_destination_files,
         path_list_for_download = APP_CONFIG.path_list_for_download,

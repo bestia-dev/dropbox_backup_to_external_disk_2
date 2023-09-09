@@ -231,7 +231,7 @@ pub struct AppConfig {
     pub path_list_for_trash_folders: &'static str,
     pub path_list_for_create_folders: &'static str,
 }
-
+/*
 /// list and sync is the complete process for backup in one command
 pub fn list_and_sync(base_path: &str, app_config: &'static AppConfig) {
     all_list_remote_and_local(base_path, app_config);
@@ -264,8 +264,8 @@ pub fn all_list_remote_and_local(base_path: &str, app_config: &'static AppConfig
     println!("{}{}", at_line(20), *CLEAR_LINE);
 }
 
-/// sync_only can be stopped with ctrl+c and then restarted if downloading takes lots of time.  
-/// No need to repeat the "list" that takes lots of times.  
+/// sync_only can be stopped with ctrl+c and then restarted if downloading takes lots of time.
+/// No need to repeat the "list" that takes lots of times.
 pub fn sync_only(app_config: &'static AppConfig) {
     println!("{}compare remote and local lists{}", *YELLOW, *RESET);
     compare_files(app_config);
@@ -429,3 +429,4 @@ pub fn compare_folders(string_list_source_folders: &str, string_list_destination
     let string_for_create = vec_for_create.join("\n");
     file_list_for_create_folders.write_str(&string_for_create).unwrap();
 }
+ */

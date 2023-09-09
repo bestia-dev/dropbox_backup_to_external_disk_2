@@ -1,7 +1,7 @@
 // utils_mod.rs
 //! A module with often used functions.
 
-use std::io::Read;
+/* use std::io::Read;
 use std::io::Stdout;
 
 #[allow(unused_imports)]
@@ -139,8 +139,8 @@ use std::time;
 use termion;
 use termion::input::TermRead;
 
-/// waits 5 seconds for the user to press any key then continues  
-/// It is usable to make visible some data before going to the next step where the screen is cleaned.  
+/// waits 5 seconds for the user to press any key then continues
+/// It is usable to make visible some data before going to the next step where the screen is cleaned.
 pub fn press_enter_to_continue_timeout_5_sec() {
     print!("press any key or wait 5 seconds to continue. 5..");
     let started = Utc::now();
@@ -256,3 +256,4 @@ impl FileTxt {
         Ok(())
     }
 }
+ */

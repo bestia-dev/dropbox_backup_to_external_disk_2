@@ -1,6 +1,6 @@
 // remote_mod.rs
 //! Module contains all the communication with the remote dropbox storage.
-
+/*
 use dropbox_sdk::default_client::UserAuthDefaultClient;
 use dropbox_sdk::files;
 
@@ -541,3 +541,4 @@ pub fn remote_content_hash(remote_path: &str, client: &UserAuthDefaultClient) ->
         }
     }
 }
+ */
