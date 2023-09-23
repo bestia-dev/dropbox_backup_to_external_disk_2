@@ -127,6 +127,11 @@ For commercial programs they probably embed them into the binary code somehow. B
 has the detailed instructions.  
 Then every time before use we need generate the "short-lived access token" for security reasons. There is the possibility to choose "no expiration" token, but I don't like it. Dropbox backup is used rarely and it is not super frustrating to make few clicks for security of your precious files. Having a "no expiration" token is like having another password for the hackers to try to hack. I like more the "short-lived" token. When I'm not using this backup program, there is no access token at all.  
 ![dropbox_2](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/raw/main/images/dropbox_2.png "dropbox_2") ![dropbox_1](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/raw/main/images/dropbox_1.png "dropbox_1")
+Use this command to store the token (encrypted) in env variable. It will ask for your interactive input like a secret password.
+
+```bash
+dropbox_backup_to_external_disk set_token
+```
 
 ## rename or move
 

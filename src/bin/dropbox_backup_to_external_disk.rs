@@ -33,10 +33,6 @@ fn main() -> std::io::Result<()> {
     })
     .expect("Error setting Ctrl-C handler"); */
 
-    let mut stdout = std::io::stdout();
-    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
-    stdout.flush()?;
-
     //create the directory temp_data/
     std::fs::create_dir_all("temp_data").unwrap();
 
@@ -49,6 +45,31 @@ fn main() -> std::io::Result<()> {
     match env::args().nth(1).as_deref() {
         None | Some("--help") | Some("-h") => print_help(),
         Some("completion") => completion(),
+        Some("set_token") => {
+            let ns_started = ns_start("set_token");
+            //input secret token like password
+            let token = inquire::Password::new("Paste Dropbox token:").without_confirmation().prompt();
+
+            match token {
+                Ok(token) => {
+                    println!("Store the token.");
+                    let just_to_avoid_plain_text = "J3a3esinyGxkSnG3mdi6-4uFFjD9bXGujs5bIzM8a6c=";
+                    let fernet = fernet::Fernet::new(&just_to_avoid_plain_text).unwrap();
+                    let token_2 = fernet.encrypt(token.as_bytes());
+                    globalenv::set_var("DBX_TOKEN_2", &token_2).unwrap();
+
+                    println!("Read the token from env.");
+                    let token_3 = std::env::var("DBX_TOKEN_2").unwrap();
+                    let fernet = fernet::Fernet::new(&just_to_avoid_plain_text).unwrap();
+                    let token_4 = fernet.decrypt(&token_3).unwrap();
+                    let token_5 = String::from_utf8(token_4).unwrap();
+                    dbg!(token_5);
+                }
+                Err(_) => println!("An error happened when asking for your token."),
+            }
+
+            ns_print_ms("set_token", ns_started);
+        }
         /*    Some("test") => {
             let ns_started = ns_start("test");
             test_connection();
@@ -229,6 +250,7 @@ fn completion() {
             "one_file_download",
             "remote_list",
             "second_backup",
+            "set_token",
             "sync_only",
             "test",
             "trash_folders",
@@ -240,9 +262,6 @@ fn completion() {
     else if last_word == "list_and_sync" || last_word == "local_list" || last_word == "all_list" {
         let sub_commands = vec!["/mnt/d/DropboxBackup1"];
         completion_return_one_or_more_sub_commands(sub_commands, word_being_completed);
-    } else if last_word == "second_backup" {
-        let sub_commands = vec!["/mnt/f/DropboxBackup2"];
-        completion_return_one_or_more_sub_commands(sub_commands, word_being_completed);
     }
 }
 
@@ -250,24 +269,25 @@ fn completion() {
 fn print_help() {
     println!(
         r#"
-  Welcome to dropbox_backup_to_external_disk
+  {YELLOW}{BOLD}Welcome to dropbox_backup_to_external_disk{RESET}
 
-  {y}1. Before first use, create your private Dropbox app:{rs}
-  - open browser on {g}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{rs}
+  {YELLOW}1. Before first use, create your private Dropbox app:{RESET}
+  - open browser on {GREEN}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{RESET}
   - click Create app, choose Scoped access, choose Full dropbox
-  - choose a globally unique app name like {g}`backup_{date}`{rs}
+  - choose a globally unique app name like {GREEN}`backup_{date}`{RESET}
   - go to tab Permissions, check `files.metadata.read` and `files.content.read`, click Submit, close browser
 
-  {y}2. Before every use, create a short-lived access token (secret):{rs}
-  - open browser on {g}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{rs}
-  - choose your existing private Dropbox app like {g}`backup_{date}`{rs}
+  {YELLOW}2. Before every use, create a short-lived access token (secret):{RESET}
+  - open browser on {GREEN}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{RESET}
+  - choose your existing private Dropbox app like {GREEN}`backup_{date}`{RESET}
   - click button `Generate` to generated short-lived access token and copy it, close browser
-  - In you Linux terminal session set a short-lived private/secret environment variable:
-{g} export DBX_OAUTH_TOKEN={rs}here paste the access token
+  - In you Linux terminal session store the token in an environment variable (encrypted):
+{GREEN}  dropbox_backup_to_external_disk set_token{RESET}
+    then paste the access token
   - test if the authentication works:
-{g}dropbox_backup_to_external_disk test{rs}
+{GREEN}dropbox_backup_to_external_disk test{RESET}
 
-  {y}Commands:{rs}
+  {YELLOW}Commands:{RESET}
   Full list and sync - from dropbox to external disk
   This command has 2 phases. 
   1. First it lists all remote and local files. That can take a lot of time if you have lot of files.
@@ -276,53 +296,50 @@ fn print_help() {
   You will need to rerun the command and wait for the lists to be fully completed.
   2. The second phase is the same as the command `sync_only`. 
   It can be interrupted with crl+c. The next `sync_only` will continue where it was interrupted.
-{g}dropbox_backup_to_external_disk list_and_sync /mnt/d/DropBoxBackup1{rs}
+{GREEN}dropbox_backup_to_external_disk list_and_sync /mnt/d/DropBoxBackup1{RESET}
 
   Sync only - one-way sync from dropbox to external disk
   It starts the sync only. Does NOT list again the remote and local files, the lists must already be completed 
   from the first command `list_and_sync`.
   It can be interrupted with crl+c. The next `sync_only` will continue where it was interrupted
-{g}dropbox_backup_to_external_disk sync_only{rs}
+{GREEN}dropbox_backup_to_external_disk sync_only{RESET}
 
-  {y}Just for debugging purpose, you can run every step separately.{rs}
+  {YELLOW}Just for debugging purpose, you can run every step separately.{RESET}
   Test connection and authorization:
-{g}dropbox_backup_to_external_disk test{rs}
+{GREEN}dropbox_backup_to_external_disk test{RESET}
   List remote files from Dropbox to `{path_list_source_files}`:
-{g}dropbox_backup_to_external_disk remote_list{rs}
+{GREEN}dropbox_backup_to_external_disk remote_list{RESET}
   List local files to `{path_list_destination_files}`:
-{g}dropbox_backup_to_external_disk local_list /mnt/d/DropBoxBackup1{rs}
+{GREEN}dropbox_backup_to_external_disk local_list /mnt/d/DropBoxBackup1{RESET}
   List all - both remote and local files to `temp_date/`:
-{g}dropbox_backup_to_external_disk all_list /mnt/d/DropBoxBackup1{rs}  
+{GREEN}dropbox_backup_to_external_disk all_list /mnt/d/DropBoxBackup1{RESET}  
   Read-only files toggle `{path_list_for_readonly}`:
-{g}dropbox_backup_to_external_disk read_only_toggle  {rs}
+{GREEN}dropbox_backup_to_external_disk read_only_toggle  {RESET}
   Compare file lists and generate `{path_list_for_download}`, `{path_list_for_trash}` and `{path_list_for_correct_time}`:
-{g}dropbox_backup_to_external_disk compare_files{rs}
+{GREEN}dropbox_backup_to_external_disk compare_files{RESET}
   Compare folders lists and generate `{path_list_for_trash_folders}`:
-{g}dropbox_backup_to_external_disk compare_folders{rs}
+{GREEN}dropbox_backup_to_external_disk compare_folders{RESET}
   Create folders from `{path_list_for_create_folders}`:
-{g}dropbox_backup_to_external_disk create_folders{rs}
+{GREEN}dropbox_backup_to_external_disk create_folders{RESET}
   Move or rename local files if they are equal in trash_from_list and download_from_list:
-{g}dropbox_backup_to_external_disk move_or_rename_local_files{rs}
+{GREEN}dropbox_backup_to_external_disk move_or_rename_local_files{RESET}
   Move to trash from `{path_list_for_trash_folders}`:
-{g}dropbox_backup_to_external_disk trash_folders{rs}
+{GREEN}dropbox_backup_to_external_disk trash_folders{RESET}
   Move to trash from `{path_list_for_trash}`:
-{g}dropbox_backup_to_external_disk trash_from_list{rs}
+{GREEN}dropbox_backup_to_external_disk trash_from_list{RESET}
   Correct time of files from `{path_list_for_correct_time}`:
-{g}dropbox_backup_to_external_disk correct_time_from_list{rs}
+{GREEN}dropbox_backup_to_external_disk correct_time_from_list{RESET}
   Download files from `{path_list_for_download}`:
-{g}dropbox_backup_to_external_disk download_from_list{rs}
+{GREEN}dropbox_backup_to_external_disk download_from_list{RESET}
   One single file download:
-{g}dropbox_backup_to_external_disk one_file_download <path>{rs}
+{GREEN}dropbox_backup_to_external_disk one_file_download <path>{RESET}
 
   For bash auto-completion:
-{g}alias dropbox_backup_to_external_disk=./dropbox_backup_to_external_disk{rs}
-{g}complete -C "dropbox_backup_to_external_disk completion" dropbox_backup_to_external_disk{rs}
+{GREEN}alias dropbox_backup_to_external_disk=./dropbox_backup_to_external_disk{RESET}
+{GREEN}complete -C "dropbox_backup_to_external_disk completion" dropbox_backup_to_external_disk{RESET}
 
   Visit open-source repository: https://github.com/bestia-dev/dropbox_backup_to_external_disk
     "#,
-        g = crossterm::style::SetForegroundColor(crossterm::style::Color::Green),
-        y = crossterm::style::SetForegroundColor(crossterm::style::Color::Yellow),
-        rs = crossterm::style::ResetColor,
         path_list_source_files = APP_CONFIG.path_list_source_files,
         path_list_destination_files = APP_CONFIG.path_list_destination_files,
         path_list_for_download = APP_CONFIG.path_list_for_download,

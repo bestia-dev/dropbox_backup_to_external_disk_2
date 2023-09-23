@@ -1,7 +1,19 @@
 // utils_mod.rs
 //! A module with often used functions.
 
-/* use std::io::Read;
+/// ansi color
+pub const GREEN: crossterm::style::SetForegroundColor = crossterm::style::SetForegroundColor(crossterm::style::Color::Green);
+/// ansi color
+pub const YELLOW: crossterm::style::SetForegroundColor = crossterm::style::SetForegroundColor(crossterm::style::Color::Yellow);
+/// ansi color
+pub const RED: crossterm::style::SetForegroundColor = crossterm::style::SetForegroundColor(crossterm::style::Color::Red);
+/// ansi color reset
+pub const RESET: crossterm::style::ResetColor = crossterm::style::ResetColor;
+/// ansi attribute
+pub const BOLD: crossterm::style::SetAttribute = crossterm::style::SetAttribute(crossterm::style::Attribute::Bold);
+
+/*
+use std::io::Read;
 use std::io::Stdout;
 
 #[allow(unused_imports)]
@@ -51,19 +63,19 @@ pub fn start_hide_cursor_terminal() -> termion::cursor::HideCursor<RawTerminal<S
     // return
     hide_cursor
 }
-
+*/
 /// returns the now in nanoseconds
 pub fn ns_start(text: &str) -> i64 {
-    let now = Utc::now();
+    let now = chrono::Utc::now();
     if !text.is_empty() {
-        println!("{}{}: {}{}", *GREEN, &Local::now().format("%Y-%m-%d %H:%M:%S").to_string(), text, *RESET);
+        println!("{GREEN}{}: {text}{RESET}", &chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string());
     }
     now.timestamp_nanos()
 }
 
 /// returns the elapsed nanoseconds
 pub fn ns_elapsed(ns_start: i64) -> i64 {
-    let now_ns = Utc::now().timestamp_nanos();
+    let now_ns = chrono::Utc::now().timestamp_nanos();
     let duration_ns = now_ns - ns_start;
     // return
     duration_ns
@@ -76,12 +88,12 @@ pub fn ns_print_ms(name: &str, ns_start: i64) -> i64 {
     if !name.is_empty() {
         use num_format::{Locale, WriteFormatted};
         let mut string_duration_ns = String::new();
-        unwrap!(string_duration_ns.write_formatted(&duration_ns, &Locale::en));
+        string_duration_ns.write_formatted(&duration_ns, &Locale::en).unwrap();
 
-        println!("{}{:>15} ms: {}{}", *GREEN, string_duration_ns, name, *RESET);
+        println!("{GREEN}{:>15} ms: {name}{RESET}", string_duration_ns);
     }
     // return new now_ns
-    Utc::now().timestamp_nanos()
+    chrono::Utc::now().timestamp_nanos()
 }
 
 /// print elapsed time in nanoseconds and returns the new now in nanoseconds
@@ -91,14 +103,14 @@ pub fn ns_print_ns(name: &str, ns_start: i64) -> i64 {
     if !name.is_empty() {
         use num_format::{Locale, WriteFormatted};
         let mut string_duration_ns = String::new();
-        unwrap!(string_duration_ns.write_formatted(&duration_ns, &Locale::en));
+        string_duration_ns.write_formatted(&duration_ns, &Locale::en).unwrap();
 
-        println!("{}{:>15} ns: {}{}", *GREEN, string_duration_ns, name, *RESET);
+        println!("{GREEN}{:>15} ns: {}{RESET}", string_duration_ns, name);
     }
     // return new now_ns
-    Utc::now().timestamp_nanos()
+    chrono::Utc::now().timestamp_nanos()
 }
-
+/*
 /// sort string lines case insensitive
 pub fn sort_string_lines(output_string: &str) -> String {
     let mut sorted_local: Vec<&str> = output_string.lines().collect();
