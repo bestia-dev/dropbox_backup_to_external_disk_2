@@ -320,9 +320,9 @@ fn print_help() {
 
   Visit open-source repository: https://github.com/bestia-dev/dropbox_backup_to_external_disk
     "#,
-        g = "",
-        y = "",
-        rs = "",
+        g = crossterm::style::SetForegroundColor(crossterm::style::Color::Green),
+        y = crossterm::style::SetForegroundColor(crossterm::style::Color::Yellow),
+        rs = crossterm::style::ResetColor,
         path_list_source_files = APP_CONFIG.path_list_source_files,
         path_list_destination_files = APP_CONFIG.path_list_destination_files,
         path_list_for_download = APP_CONFIG.path_list_for_download,
