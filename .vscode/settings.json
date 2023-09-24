@@ -36,6 +36,7 @@
         "rustprojects",
         "substack",
         "termion",
+        "thiserror",
         "threadpool",
         "unhide",
         "walkdir",

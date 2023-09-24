@@ -207,15 +207,42 @@ mod local_mod;
 mod remote_mod;
 mod utils_mod;
 
-use std::fs;
-
 pub use local_mod::*;
 pub use remote_mod::*;
 pub use utils_mod::*;
 
 #[allow(unused_imports)]
 use uncased::UncasedStr;
-use unwrap::unwrap;
+
+/// list of possible errors from this library
+#[derive(thiserror::Error, Debug)]
+pub enum LibError {
+    #[error("EnvError: {0}")]
+    EnvError(#[from] globalenv::EnvError),
+    #[error("VarError: {0}")]
+    VarError(#[from] std::env::VarError),
+
+    #[error("DecryptionError: {0}")]
+    DecryptionError(#[from] fernet::DecryptionError),
+
+    #[error("FromUtf8Error: {0}")]
+    FromUtf8Error(#[from] std::string::FromUtf8Error),
+
+    #[error("DropboxError: {0}")]
+    DropboxError(#[from] dropbox_sdk::Error),
+    #[error("ListFolderError: {0}")]
+    ListFolderError(#[from] dropbox_sdk::files::ListFolderError),
+
+    #[error("InquireError: {0}")]
+    InquireError(#[from] inquire::InquireError),
+
+    #[error("ErrorFromString: {0}")]
+    ErrorFromString(String),
+    #[error("ErrorFromStaticStr: {0}")]
+    ErrorFromStr(&'static str),
+    #[error("unknown error")]
+    UnknownError,
+}
 
 pub struct AppConfig {
     pub path_list_base_local_path: &'static str,
@@ -231,6 +258,7 @@ pub struct AppConfig {
     pub path_list_for_trash_folders: &'static str,
     pub path_list_for_create_folders: &'static str,
 }
+
 /*
 /// list and sync is the complete process for backup in one command
 pub fn list_and_sync(base_path: &str, app_config: &'static AppConfig) {

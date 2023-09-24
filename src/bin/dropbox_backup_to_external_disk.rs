@@ -5,9 +5,7 @@
 // But to be interactive I cannot wait for a lib function to finish. The lib functions should be in another thread.
 // Then send msg to the bin  main thread that print that to the screen.
 
-use crossterm::{terminal, ExecutableCommand};
 use dropbox_backup_to_external_disk::*;
-use std::{env, io::Write};
 
 // define paths in bin, not in lib
 static APP_CONFIG: AppConfig = AppConfig {
@@ -36,45 +34,18 @@ fn main() -> std::io::Result<()> {
     //create the directory temp_data/
     std::fs::create_dir_all("temp_data").unwrap();
 
-    let base_path = if std::path::Path::new(APP_CONFIG.path_list_base_local_path).exists() {
+    /*   let base_path = if std::path::Path::new(APP_CONFIG.path_list_base_local_path).exists() {
         std::fs::read_to_string(APP_CONFIG.path_list_base_local_path).unwrap()
     } else {
         String::new()
-    };
+    }; */
 
-    match env::args().nth(1).as_deref() {
+    match std::env::args().nth(1).as_deref() {
         None | Some("--help") | Some("-h") => print_help(),
         Some("completion") => completion(),
-        Some("set_token") => {
-            let ns_started = ns_start("set_token");
-            //input secret token like password
-            let token = inquire::Password::new("Paste Dropbox token:").without_confirmation().prompt();
-
-            match token {
-                Ok(token) => {
-                    println!("Store the token.");
-                    let just_to_avoid_plain_text = "J3a3esinyGxkSnG3mdi6-4uFFjD9bXGujs5bIzM8a6c=";
-                    let fernet = fernet::Fernet::new(&just_to_avoid_plain_text).unwrap();
-                    let token_2 = fernet.encrypt(token.as_bytes());
-                    globalenv::set_var("DBX_TOKEN_2", &token_2).unwrap();
-
-                    println!("Read the token from env.");
-                    let token_3 = std::env::var("DBX_TOKEN_2").unwrap();
-                    let fernet = fernet::Fernet::new(&just_to_avoid_plain_text).unwrap();
-                    let token_4 = fernet.decrypt(&token_3).unwrap();
-                    let token_5 = String::from_utf8(token_4).unwrap();
-                    dbg!(token_5);
-                }
-                Err(_) => println!("An error happened when asking for your token."),
-            }
-
-            ns_print_ms("set_token", ns_started);
-        }
-        /*    Some("test") => {
-            let ns_started = ns_start("test");
-            test_connection();
-            ns_print_ms("test", ns_started);
-        }
+        Some("encode_token") => ui_encode_token(),
+        Some("test") => ui_test_connection(),
+        /*
         Some("list_and_sync") => match env::args().nth(2).as_deref() {
             Some(path) => {
                 let ns_started = ns_start("list_and_sync");
@@ -250,7 +221,7 @@ fn completion() {
             "one_file_download",
             "remote_list",
             "second_backup",
-            "set_token",
+            "encode_token",
             "sync_only",
             "test",
             "trash_folders",
@@ -272,20 +243,23 @@ fn print_help() {
   {YELLOW}{BOLD}Welcome to dropbox_backup_to_external_disk{RESET}
 
   {YELLOW}1. Before first use, create your private Dropbox app:{RESET}
-  - open browser on {GREEN}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{RESET}
-  - click Create app, choose Scoped access, choose Full dropbox
-  - choose a globally unique app name like {GREEN}`backup_{date}`{RESET}
-  - go to tab Permissions, check `files.metadata.read` and `files.content.read`, click Submit, close browser
+  - Open browser on {GREEN}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{RESET}
+  - Click Create app, choose Scoped access, choose Full dropbox
+  - Choose a globally unique app name like {GREEN}`backup_{date}`{RESET}
+  - Go to tab Permissions, check `files.metadata.read` and `files.content.read`, click Submit, close browser
 
   {YELLOW}2. Before every use, create a short-lived access token (secret):{RESET}
-  - open browser on {GREEN}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{RESET}
-  - choose your existing private Dropbox app like {GREEN}`backup_{date}`{RESET}
-  - click button `Generate` to generated short-lived access token and copy it, close browser
-  - In you Linux terminal session store the token in an environment variable (encrypted):
-{GREEN}  dropbox_backup_to_external_disk set_token{RESET}
-    then paste the access token
-  - test if the authentication works:
-{GREEN}dropbox_backup_to_external_disk test{RESET}
+  - Open browser on {GREEN}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{RESET}
+  - Choose your existing private Dropbox app like {GREEN}`backup_{date}`{RESET}
+  - Click button `Generate` to generated short-lived access token and copy it, close browser
+  - In you Linux terminal session encode the token to avoid plain text in env var:
+{GREEN}  dropbox_backup_to_external_disk encode_token{RESET}
+    then paste (shift+ctrl+v) the access token and press ENTER
+    The result will be a text like this:
+{GREEN}  export DBX_TOKEN_ENC=xxxxxxxxxxxxxxxx{RESET}
+  - Copy-paste and execute it in bash (shift+ctrl+c shift+ctrl+v ENTER) to store it in env var.
+  - Test if the authentication works:
+{GREEN}  dropbox_backup_to_external_disk test{RESET}
 
   {YELLOW}Commands:{RESET}
   Full list and sync - from dropbox to external disk
@@ -350,4 +324,34 @@ fn print_help() {
         path_list_for_create_folders = APP_CONFIG.path_list_for_create_folders,
         date = chrono::offset::Utc::now().format("%Y%m%dT%H%M%SZ"),
     );
+}
+
+/// ask the user to paste the token interactively and save it encrypted into env
+fn ui_encode_token() {
+    let ns_started = ns_start("ui_encode_token");
+    // communicate errors to user here (if needed)
+    match ui_encode_token_return_result() {
+        Ok(token_enc) => println!("export DBX_TOKEN_ENC={token_enc}"),
+        Err(err) => println!("{}", err),
+    }
+    ns_print_ms("ui_encode_token", ns_started);
+}
+
+/// ask the user to paste the token interactively and save it encrypted into env
+fn ui_encode_token_return_result() -> Result<String, LibError> {
+    //input secret token like password in command line
+    let token = inquire::Password::new("").without_confirmation().prompt()?;
+    let token_enc = token_encode(token)?;
+    Ok(token_enc)
+}
+
+/// ui_test_connection
+fn ui_test_connection() {
+    let ns_started = ns_start("ui_test_connection");
+    // communicate errors to user here (if needed)
+    match test_connection() {
+        Ok(_) => println!("{GREEN}Test connection and authorization ok.{RESET}"),
+        Err(err) => println!("{}", err),
+    }
+    ns_print_ms("ui_test_connection", ns_started);
 }

@@ -1,8 +1,37 @@
 // remote_mod.rs
 //! Module contains all the communication with the remote dropbox storage.
-/*
+
 use dropbox_sdk::default_client::UserAuthDefaultClient;
 use dropbox_sdk::files;
+
+use crate::*;
+
+pub fn token_encode(token: String) -> Result<String, LibError> {
+    let fernet = fernet::Fernet::new(JUST_TO_AVOID_PLAIN_TEXT).ok_or_else(|| LibError::ErrorFromStr("Fernet key is not correct."))?;
+    let token_enc = fernet.encrypt(token.as_bytes());
+    Ok(token_enc)
+}
+
+/// test authentication with dropbox.com
+pub fn test_connection() -> Result<(), LibError> {
+    let token = get_short_lived_access_token()?;
+    let client = UserAuthDefaultClient::new(token);
+    (files::list_folder(&client, &files::ListFolderArg::new("".to_string()))?)?;
+    Ok(())
+}
+
+/// get token from env variable
+pub fn get_short_lived_access_token() -> Result<dropbox_sdk::oauth2::Authorization, LibError> {
+    let token = std::env::var(ENV_DBX_TOKEN_ENC)?;
+    let fernet = fernet::Fernet::new(JUST_TO_AVOID_PLAIN_TEXT).ok_or_else(|| LibError::ErrorFromStr("Fernet key is not correct."))?;
+    let token = fernet.decrypt(&token)?;
+    let token = String::from_utf8(token)?;
+    dbg!(&token);
+    // return
+    Ok(dropbox_sdk::oauth2::Authorization::from_access_token(token))
+}
+
+/*
 
 #[allow(unused_imports)]
 use std::collections::VecDeque;
@@ -15,34 +44,11 @@ use std::thread;
 use uncased::UncasedStr;
 use unwrap::unwrap;
 
-use crate::*;
 
-/// test authentication with dropbox.com
-pub fn test_connection() {
-    let token = get_short_lived_access_token();
-    let client = UserAuthDefaultClient::new(token);
-    match files::list_folder(&client, &files::ListFolderArg::new("".to_string())) {
-        Ok(Ok(_result)) => println!("{}test connection and authorization: ok{}", *GREEN, *RESET),
-        Ok(Err(e)) => panic!("error: {}", e),
-        Err(e) => panic!("error: {}", e),
-    }
-}
 
-/// get token from env variable
-pub fn get_short_lived_access_token() -> dropbox_sdk::oauth2::Authorization {
-    // The user must prepare the short-lived access token in the environment variable
-    let token = match env::var("DBX_OAUTH_TOKEN") {
-        Ok(token) => {
-            //println!("short-lived access token read from env var DBX_OAUTH_TOKEN.");
-            token
-        }
-        Err(_err) => {
-            panic!("Error: The short-lived access token is not found in the env variable DBX_OAUTH_TOKEN.");
-        }
-    };
-    // return
-    dropbox_sdk::oauth2::Authorization::from_access_token(token)
-}
+
+
+
 
 /// get remote list in parallel
 /// first get the first level of folders and then request in parallel sub-folders recursively

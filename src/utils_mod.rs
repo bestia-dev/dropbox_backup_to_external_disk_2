@@ -11,7 +11,10 @@ pub const RED: crossterm::style::SetForegroundColor = crossterm::style::SetForeg
 pub const RESET: crossterm::style::ResetColor = crossterm::style::ResetColor;
 /// ansi attribute
 pub const BOLD: crossterm::style::SetAttribute = crossterm::style::SetAttribute(crossterm::style::Attribute::Bold);
-
+/// TODO: export this in a session env var
+pub const JUST_TO_AVOID_PLAIN_TEXT: &'static str = "J3a3esinyGxkSnG3mdi6-4uFFjD9bXGujs5bIzM8a6c=";
+/// env variable for encrypted token
+pub const ENV_DBX_TOKEN_ENC: &'static str = "DBX_TOKEN_ENC";
 /*
 use std::io::Read;
 use std::io::Stdout;
@@ -66,6 +69,7 @@ pub fn start_hide_cursor_terminal() -> termion::cursor::HideCursor<RawTerminal<S
 */
 /// returns the now in nanoseconds
 pub fn ns_start(text: &str) -> i64 {
+    // TODO: on drop could write/trace the time or just use tracing instead of this
     let now = chrono::Utc::now();
     if !text.is_empty() {
         println!("{GREEN}{}: {text}{RESET}", &chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string());
