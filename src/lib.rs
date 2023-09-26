@@ -214,13 +214,35 @@ pub use utils_mod::*;
 #[allow(unused_imports)]
 use uncased::UncasedStr;
 
+// Global variable to store the short lived token for Dropbox.
+// Global variables are so complicated in Rust.
+// Read more: https://www.sitepoint.com/rust-global-variables/
+// I will use Multi-threaded Global Variable with Runtime Initialization and Interior Mutability, the most complicated and usable one.
+// Example how to use it: DROPBOX_SHORT_LIVED_TOKEN.lock().unwrap()
+pub static GLOBAL_DROPBOX_SHORT_LIVED_TOKEN: once_cell::sync::OnceCell<std::sync::Mutex<dropbox_sdk::oauth2::Authorization>> = once_cell::sync::OnceCell::new();
+
+/// It is silly to put the master key and the encrypted value in the same file.
+/// But this is not for security. The token is on purpose short-lived.
+/// It is only about learning simple encryption with fernet and json files.
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct Config {
+    /// master key
+    master_key: String,
+    /// token enc
+    token_enc: String,
+}
+
 /// list of possible errors from this library
 #[derive(thiserror::Error, Debug)]
 pub enum LibError {
-    #[error("EnvError: {0}")]
-    EnvError(#[from] globalenv::EnvError),
     #[error("VarError: {0}")]
     VarError(#[from] std::env::VarError),
+
+    #[error("IoError: {0}")]
+    IoError(#[from] std::io::Error),
+
+    #[error("SerdeJsonError: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
 
     #[error("DecryptionError: {0}")]
     DecryptionError(#[from] fernet::DecryptionError),

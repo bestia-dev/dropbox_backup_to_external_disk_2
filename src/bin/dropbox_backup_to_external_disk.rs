@@ -23,13 +23,16 @@ static APP_CONFIG: AppConfig = AppConfig {
     path_list_for_create_folders: "temp_data/list_for_create_folders.csv",
 };
 
-fn main() -> std::io::Result<()> {
+fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
     /*     ctrlc::set_handler(move || {
         println!("terminated with ctrl+c. {}", *UNHIDE_CURSOR);
         std::process::exit(exitcode::OK);
     })
     .expect("Error setting Ctrl-C handler"); */
+
+    //read Config
+    //println!("{}", GLOBAL_DROPBOX_SHORT_LIVED_TOKEN.lock().unwrap());
 
     //create the directory temp_data/
     std::fs::create_dir_all("temp_data").unwrap();
@@ -43,7 +46,8 @@ fn main() -> std::io::Result<()> {
     match std::env::args().nth(1).as_deref() {
         None | Some("--help") | Some("-h") => print_help(),
         Some("completion") => completion(),
-        Some("encode_token") => ui_encode_token(),
+        Some("store_token") => ui_store_token(),
+        Some("delete_token") => ui_delete_token(),
         Some("test") => ui_test_connection(),
         /*
         Some("list_and_sync") => match env::args().nth(2).as_deref() {
@@ -214,6 +218,7 @@ fn completion() {
             "create_folders",
             "read_only_toggle",
             "correct_time_from_list",
+            "delete_token",
             "download_from_list",
             "list_and_sync",
             "local_list",
@@ -221,7 +226,7 @@ fn completion() {
             "one_file_download",
             "remote_list",
             "second_backup",
-            "encode_token",
+            "store_token",
             "sync_only",
             "test",
             "trash_folders",
@@ -252,12 +257,10 @@ fn print_help() {
   - Open browser on {GREEN}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{RESET}
   - Choose your existing private Dropbox app like {GREEN}`backup_{date}`{RESET}
   - Click button `Generate` to generated short-lived access token and copy it, close browser
-  - In you Linux terminal session encode the token to avoid plain text in env var:
-{GREEN}  dropbox_backup_to_external_disk encode_token{RESET}
-    then paste (shift+ctrl+v) the access token and press ENTER
-    The result will be a text like this:
-{GREEN}  export DBX_TOKEN_ENC=xxxxxxxxxxxxxxxx{RESET}
-  - Copy-paste and execute it in bash (shift+ctrl+c shift+ctrl+v ENTER) to store it in env var.
+  - In you Linux terminal session store the token to use it then in multiple sequential commands:
+{GREEN}  dropbox_backup_to_external_disk store_token{RESET}
+  - For security reasons you may delete the stored token. It is a short-lived token, so the danger is not big:
+{GREEN}  dropbox_backup_to_external_disk delete_token{RESET}
   - Test if the authentication works:
 {GREEN}  dropbox_backup_to_external_disk test{RESET}
 
@@ -326,23 +329,34 @@ fn print_help() {
     );
 }
 
-/// ask the user to paste the token interactively and save it encrypted into env
-fn ui_encode_token() {
-    let ns_started = ns_start("ui_encode_token");
+/// ask the user to paste the token interactively and temporarily store it encrypted
+fn ui_store_token() {
+    let ns_started = ns_start("ui_store_token");
     // communicate errors to user here (if needed)
-    match ui_encode_token_return_result() {
-        Ok(token_enc) => println!("export DBX_TOKEN_ENC={token_enc}"),
+    match ui_store_token_fallible() {
+        Ok(_) => println!("The token is temporarily stored."),
         Err(err) => println!("{}", err),
     }
-    ns_print_ms("ui_encode_token", ns_started);
+    ns_print_ms("ui_store_token", ns_started);
 }
 
-/// ask the user to paste the token interactively and save it encrypted into env
-fn ui_encode_token_return_result() -> Result<String, LibError> {
+/// ask the user to paste the token interactively and temporarily store it encrypted
+fn ui_store_token_fallible() -> Result<(), LibError> {
     //input secret token like password in command line
     let token = inquire::Password::new("").without_confirmation().prompt()?;
-    let token_enc = token_encode(token)?;
-    Ok(token_enc)
+    token_encode_and_store(token)?;
+    Ok(())
+}
+
+/// delete the file with the token
+fn ui_delete_token() {
+    let ns_started = ns_start("ui_delete_token");
+    // communicate errors to user here (if needed)
+    match token_delete() {
+        Ok(_) => println!("Token file deleted."),
+        Err(err) => println!("{}", err),
+    }
+    ns_print_ms("ui_delete_token", ns_started);
 }
 
 /// ui_test_connection
@@ -350,7 +364,7 @@ fn ui_test_connection() {
     let ns_started = ns_start("ui_test_connection");
     // communicate errors to user here (if needed)
     match test_connection() {
-        Ok(_) => println!("{GREEN}Test connection and authorization ok.{RESET}"),
+        Ok(_) => println!("Test connection and authorization ok."),
         Err(err) => println!("{}", err),
     }
     ns_print_ms("ui_test_connection", ns_started);
