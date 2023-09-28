@@ -5,8 +5,6 @@
 // But to be interactive I cannot wait for a lib function to finish. The lib functions should be in another thread.
 // Then send msg to the bin main thread that print that to the screen.
 
-use std::ops::Deref;
-
 use dropbox_backup_to_external_disk::*;
 
 // define paths in bin, not in lib
@@ -25,15 +23,15 @@ static APP_CONFIG: AppConfig = AppConfig {
     path_list_for_create_folders: "temp_data/list_for_create_folders.csv",
 };
 
-/// AppState struct contains private fields.
-/// It will be used as a global mutable state only with methods from the AppStateTrait.
+/// AppState struct contains only private fields.
+/// Those will be used as global mutable, but only using methods from AppStateTrait.
 #[derive(Debug)]
-struct BinAppState {
-    // this is a private field and can be accessed only with methods from AppStateTrait
+struct AppState {
     string_x: String,
 }
 
-impl AppStateTrait for BinAppState {
+/// implementation of AppStateTrait that is defined in the lib project
+impl AppStateTrait for AppState {
     fn load_keys_from_io(&self) -> Result<(String, String), LibError> {
         let master_key = std::env::var("DBX_KEY_1")?;
         let token_enc = std::env::var("DBX_KEY_2")?;
@@ -44,7 +42,7 @@ impl AppStateTrait for BinAppState {
         self.string_x.to_string()
     }
     fn set_first_field(&mut self, value: String) {
-        self.string_x.push_str(&value);
+        self.string_x = value;
     }
 }
 
@@ -55,17 +53,10 @@ fn main() -> anyhow::Result<()> {
         std::process::exit(exitcode::OK);
     })
     .expect("Error setting Ctrl-C handler"); */
-    let bin_app_state = BinAppState { string_x: String::from("xxx") };
-    // init the global struct APP_STATE
-    let _ = APP_STATE.set(std::sync::Mutex::new(Box::new(bin_app_state)));
 
-    /*     APP_STATE.get_or_init(|| {
-        Mutex::new(AppState {
-            master_key: String::from("x"),
-            // function pointer
-            load_keys_from_io: load_keys_from_io,
-        })
-    }); */
+    // init the global struct APP_STATE defined in the lib project
+    let bin_app_state = AppState { string_x: String::from("") };
+    let _ = APP_STATE.set(std::sync::Mutex::new(Box::new(bin_app_state)));
 
     //create the directory temp_data/
     std::fs::create_dir_all("temp_data").unwrap();
