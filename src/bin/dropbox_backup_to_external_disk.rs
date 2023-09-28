@@ -5,6 +5,8 @@
 // But to be interactive I cannot wait for a lib function to finish. The lib functions should be in another thread.
 // Then send msg to the bin main thread that print that to the screen.
 
+use std::ops::Deref;
+
 use dropbox_backup_to_external_disk::*;
 
 // define paths in bin, not in lib
@@ -23,6 +25,29 @@ static APP_CONFIG: AppConfig = AppConfig {
     path_list_for_create_folders: "temp_data/list_for_create_folders.csv",
 };
 
+/// AppState struct contains private fields.
+/// It will be used as a global mutable state only with methods from the AppStateTrait.
+#[derive(Debug)]
+struct BinAppState {
+    // this is a private field and can be accessed only with methods from AppStateTrait
+    string_x: String,
+}
+
+impl AppStateTrait for BinAppState {
+    fn load_keys_from_io(&self) -> Result<(String, String), LibError> {
+        let master_key = std::env::var("DBX_KEY_1")?;
+        let token_enc = std::env::var("DBX_KEY_2")?;
+        dbg!(&master_key);
+        Ok((master_key, token_enc))
+    }
+    fn get_first_field(&self) -> String {
+        self.string_x.to_string()
+    }
+    fn set_first_field(&mut self, value: String) {
+        self.string_x.push_str(&value);
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
     /*     ctrlc::set_handler(move || {
@@ -30,9 +55,17 @@ fn main() -> anyhow::Result<()> {
         std::process::exit(exitcode::OK);
     })
     .expect("Error setting Ctrl-C handler"); */
+    let bin_app_state = BinAppState { string_x: String::from("xxx") };
+    // init the global struct APP_STATE
+    let _ = APP_STATE.set(std::sync::Mutex::new(Box::new(bin_app_state)));
 
-    //read Config
-    //println!("{}", GLOBAL_DROPBOX_SHORT_LIVED_TOKEN.lock().unwrap());
+    /*     APP_STATE.get_or_init(|| {
+        Mutex::new(AppState {
+            master_key: String::from("x"),
+            // function pointer
+            load_keys_from_io: load_keys_from_io,
+        })
+    }); */
 
     //create the directory temp_data/
     std::fs::create_dir_all("temp_data").unwrap();
@@ -332,9 +365,17 @@ fn print_help() {
 /// This command should be executed with `eval $(dropbox_backup_to_external_disk encode_token)` to store the env var in the current shell.
 /// Similar to how works `eval $(ssh-agent)`
 fn ui_encode_token() {
+    /// Inner function is a separate function so I can use the `?` control flow.
+    fn ui_encode_token_inner() -> Result<(String, String), LibError> {
+        //input secret token like password in command line
+        let token = inquire::Password::new("").without_confirmation().prompt()?;
+        let (master_key, token_enc) = encode_token(token)?;
+        Ok((master_key, token_enc))
+    }
+
     // return bash commands because of eval$(...) or
     // communicate errors to user - also as bash command because of eval$(...)
-    match ui_encode_token_fallible() {
+    match ui_encode_token_inner() {
         Ok((master_key, token_enc)) => println!(
             r#"
 export DBX_KEY_1={master_key}
@@ -345,22 +386,12 @@ export DBX_KEY_2={token_enc}
     }
 }
 
-/// This function can return an error. It is still a UI function because of the prompt.
-/// It is a separate function so I can use the `?` control flow.
-fn ui_encode_token_fallible() -> Result<(String, String), LibError> {
-    //input secret token like password in command line
-    let token = inquire::Password::new("").without_confirmation().prompt()?;
-    let (master_key, token_enc) = encode_token(token)?;
-    Ok((master_key, token_enc))
-}
-
 /// ui_test_connection
 fn ui_test_connection() {
-    let ns_started = ns_start("ui_test_connection");
     // communicate errors to user here (if needed)
+    // send function pointer
     match test_connection() {
         Ok(_) => println!("Test connection and authorization ok."),
         Err(err) => println!("{}", err),
     }
-    ns_print_ms("ui_test_connection", ns_started);
 }

@@ -18,17 +18,25 @@ pub fn encode_token(token: String) -> Result<(String, String), LibError> {
 }
 
 /// test authentication with dropbox.com
+/// experiment with sending function pointer
 pub fn test_connection() -> Result<(), LibError> {
     let token = get_authorization_token()?;
-    let client = UserAuthDefaultClient::new(token);
-    (files::list_folder(&client, &files::ListFolderArg::new("".to_string()))?)?;
+    //let client = UserAuthDefaultClient::new(token);
+    //(files::list_folder(&client, &files::ListFolderArg::new("".to_string()))?)?;
     Ok(())
 }
 
 /// get authorization token from env var
 pub fn get_authorization_token() -> Result<dropbox_sdk::oauth2::Authorization, LibError> {
-    let master_key = std::env::var("DBX_KEY_1")?;
-    let token_enc = std::env::var("DBX_KEY_2")?;
+    // call a function from the bin project using a function pointer
+    let (master_key, token_enc) = APP_STATE.get().unwrap().lock().unwrap().load_keys_from_io()?;
+    let first_field = APP_STATE.get().unwrap().lock().unwrap().get_first_field();
+    dbg!(first_field);
+    APP_STATE.get().unwrap().lock().unwrap().set_first_field("aaa".to_string());
+
+    let first_field = APP_STATE.get().unwrap().lock().unwrap().get_first_field();
+    dbg!(first_field);
+
     let fernet = fernet::Fernet::new(&master_key).ok_or_else(|| LibError::ErrorFromStr("Fernet master key is not correct."))?;
     let token = fernet.decrypt(&token_enc)?;
     let token = String::from_utf8(token)?;

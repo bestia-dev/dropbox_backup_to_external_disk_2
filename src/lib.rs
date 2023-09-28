@@ -214,23 +214,21 @@ pub use utils_mod::*;
 #[allow(unused_imports)]
 use uncased::UncasedStr;
 
-// Global variable to store the short lived token for Dropbox.
+/// This trait defines what functions must the bin project implement
+/// and the lib project can use them. All IO must be defined inside the bin project: UI, env, file access.
+/// That way the same lib project can be used from different bin: CLI, TUI, GUI,...
+pub trait AppStateTrait: Sync + Send {
+    fn load_keys_from_io(&self) -> Result<(String, String), LibError>;
+    fn get_first_field(&self) -> String;
+    fn set_first_field(&mut self, value: String);
+}
+
+// Global variable to store the Application state.
 // Global variables are so complicated in Rust.
 // Read more: https://www.sitepoint.com/rust-global-variables/
 // I will use Multi-threaded Global Variable with Runtime Initialization and Interior Mutability, the most complicated and usable one.
-// Example how to use it: DROPBOX_SHORT_LIVED_TOKEN.lock().unwrap()
-pub static GLOBAL_DROPBOX_SHORT_LIVED_TOKEN: once_cell::sync::OnceCell<std::sync::Mutex<dropbox_sdk::oauth2::Authorization>> = once_cell::sync::OnceCell::new();
-
-/// It is silly to put the master key and the encrypted value in the same file.
-/// But this is not for security. The token is on purpose short-lived.
-/// It is only about learning simple encryption with fernet and json files.
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Config {
-    /// master key
-    master_key: String,
-    /// token enc
-    token_enc: String,
-}
+// Example how to use it: APP_STATE.lock().unwrap()
+pub static APP_STATE: once_cell::sync::OnceCell<std::sync::Mutex<Box<dyn AppStateTrait>>> = once_cell::sync::OnceCell::new();
 
 /// list of possible errors from this library
 #[derive(thiserror::Error, Debug)]
