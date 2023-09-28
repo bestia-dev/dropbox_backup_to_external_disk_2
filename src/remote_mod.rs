@@ -28,9 +28,9 @@ pub fn test_connection() -> Result<(), LibError> {
     Ok(())
 }
 
-/// get authorization token from env var
+/// read encoded token (from env), decode and return the authorization token
 pub fn get_authorization_token() -> Result<dropbox_sdk::oauth2::Authorization, LibError> {
-    // call a function from the bin project using a function pointer
+    // the global APP_STATE method reads encoded tokens from env var
     let (master_key, token_enc) = APP_STATE.get().unwrap().lock().unwrap().load_keys_from_io()?;
     let first_field = APP_STATE.get().unwrap().lock().unwrap().get_first_field();
     dbg!(first_field);

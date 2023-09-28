@@ -6,7 +6,7 @@
 // But to be interactive I cannot wait for a lib function to finish. The lib functions should be in another thread.
 // Then send msg to the bin main thread that print that to the screen.
 
-// use all of the lib project
+// use exported code from the lib project
 use dropbox_backup_to_external_disk::*;
 
 // define paths in bin, not in lib

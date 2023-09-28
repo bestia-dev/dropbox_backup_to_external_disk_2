@@ -7,7 +7,7 @@ use crate::error_mod::LibError;
 /// That way the same lib project can be used from different bin: CLI, TUI, GUI, env, file, network,...  
 /// These methods will be available globally.
 pub trait AppStateTrait: Sync + Send {
-    /// load keys from env
+    /// get encrypted authorization token from env var
     fn load_keys_from_io(&self) -> Result<(String, String), LibError>;
     /// get first field
     fn get_first_field(&self) -> String;
