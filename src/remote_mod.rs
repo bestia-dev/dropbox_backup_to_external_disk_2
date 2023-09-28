@@ -7,28 +7,14 @@ use dropbox_sdk::files;
 use crate::*;
 
 /// This is a short-lived token, so security is not my primary concern.
-/// But it is bad practice to store anything as plain text. I will encode it and store it in a config file.
+/// But it is bad practice to store anything as plain text. I will encode it and store it in env var.
 /// This is more like an obfuscation tactic to make it harder, but in no way impossible, to find out the secret.
-/// I need to store the token somewhere because the CLI can be executed many times sequentially.
-pub fn token_encode_and_store(token: String) -> Result<(), LibError> {
+pub fn encode_token(token: String) -> Result<(String, String), LibError> {
     // every time, the master key will be random and temporary
     let master_key = fernet::Fernet::generate_key();
     let fernet = fernet::Fernet::new(&master_key).ok_or_else(|| LibError::ErrorFromStr("Fernet key is not correct."))?;
     let token_enc = fernet.encrypt(token.as_bytes());
-    let config = Config { master_key, token_enc };
-    let config_path = get_config_path()?;
-    let json5 = serde_json::to_string(&config)?;
-    std::fs::create_dir_all(&config_path.parent().ok_or_else(|| LibError::ErrorFromStr("Parent dir not exist."))?)?;
-    std::fs::write(&config_path, json5)?;
-    Ok(())
-}
-
-/// For security reasons you may delete the stored token.
-/// It is a short-lived token, so the danger is not big.
-pub fn token_delete() -> Result<(), LibError> {
-    let config_path = get_config_path()?;
-    std::fs::remove_file(config_path)?;
-    Ok(())
+    Ok((master_key, token_enc))
 }
 
 /// test authentication with dropbox.com
@@ -39,28 +25,15 @@ pub fn test_connection() -> Result<(), LibError> {
     Ok(())
 }
 
-/// get authorization token from config file
+/// get authorization token from env var
 pub fn get_authorization_token() -> Result<dropbox_sdk::oauth2::Authorization, LibError> {
-    let config_path = get_config_path()?;
-    if !config_path.exists() {
-        return Err(LibError::ErrorFromStr("Config file does not exist. Execute the store_token command to create the file."));
-    }
-    let content = std::fs::read_to_string(config_path)?;
-    let config: Config = serde_json::from_str(&content)?;
-    let fernet = fernet::Fernet::new(&config.master_key).ok_or_else(|| LibError::ErrorFromStr("Fernet master key is not correct."))?;
-    let token = fernet.decrypt(&config.token_enc)?;
+    let master_key = std::env::var("DBX_KEY_1")?;
+    let token_enc = std::env::var("DBX_KEY_2")?;
+    let fernet = fernet::Fernet::new(&master_key).ok_or_else(|| LibError::ErrorFromStr("Fernet master key is not correct."))?;
+    let token = fernet.decrypt(&token_enc)?;
     let token = String::from_utf8(token)?;
     // return
     Ok(dropbox_sdk::oauth2::Authorization::from_access_token(token))
-}
-
-fn get_config_path() -> Result<std::path::PathBuf, LibError> {
-    let proj_dirs = directories::ProjectDirs::from("dev", "bestia", "dropbox_backup_to_external_disk").ok_or_else(|| LibError::ErrorFromString(format!("error directories::ProjectDirs")))?;
-    let config_path = proj_dirs.config_dir().join("config.json");
-    // Linux:   /home/alice/.config/dropbox_backup_to_external_disk
-    // Windows: C:\Users\Alice\AppData\Roaming\bestia\dropbox_backup_to_external_disk
-    // macOS:   /Users/Alice/Library/Application Support/dev.bestia.dropbox_backup_to_external_disk
-    Ok(config_path)
 }
 
 /*

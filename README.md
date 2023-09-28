@@ -130,7 +130,7 @@ Then every time before use we need generate the "short-lived access token" for s
 Use this command to store the token (encrypted) in env variable. It will ask for your interactive input like a secret password.
 
 ```bash
-dropbox_backup_to_external_disk store_token
+dropbox_backup_to_external_disk encode_token
 ```
 
 ## rename or move

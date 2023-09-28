@@ -3,7 +3,7 @@
 // All work with input/output should be inside the bin part of the Rust project, and nothing in the lib part.
 // Inside bin I should print on the screen and open or create Files. Then pass the Files to the lib part to operate on them.
 // But to be interactive I cannot wait for a lib function to finish. The lib functions should be in another thread.
-// Then send msg to the bin  main thread that print that to the screen.
+// Then send msg to the bin main thread that print that to the screen.
 
 use dropbox_backup_to_external_disk::*;
 
@@ -46,8 +46,7 @@ fn main() -> anyhow::Result<()> {
     match std::env::args().nth(1).as_deref() {
         None | Some("--help") | Some("-h") => print_help(),
         Some("completion") => completion(),
-        Some("store_token") => ui_store_token(),
-        Some("delete_token") => ui_delete_token(),
+        Some("encode_token") => ui_encode_token(),
         Some("test") => ui_test_connection(),
         /*
         Some("list_and_sync") => match env::args().nth(2).as_deref() {
@@ -218,7 +217,6 @@ fn completion() {
             "create_folders",
             "read_only_toggle",
             "correct_time_from_list",
-            "delete_token",
             "download_from_list",
             "list_and_sync",
             "local_list",
@@ -226,7 +224,7 @@ fn completion() {
             "one_file_download",
             "remote_list",
             "second_backup",
-            "store_token",
+            "encode_token",
             "sync_only",
             "test",
             "trash_folders",
@@ -257,10 +255,9 @@ fn print_help() {
   - Open browser on {GREEN}<https://www.dropbox.com/developers/apps?_tk=pilot_lp&_ad=topbar4&_camp=myapps>{RESET}
   - Choose your existing private Dropbox app like {GREEN}`backup_{date}`{RESET}
   - Click button `Generate` to generated short-lived access token and copy it, close browser
-  - In you Linux terminal session store the token to use it then in multiple sequential commands:
-{GREEN}  dropbox_backup_to_external_disk store_token{RESET}
-  - For security reasons you may delete the stored token. It is a short-lived token, so the danger is not big:
-{GREEN}  dropbox_backup_to_external_disk delete_token{RESET}
+  - In you Linux terminal session store the token to use it then in multiple sequential commands in your current shell with eval:
+{GREEN}  eval $(dropbox_backup_to_external_disk encode_token){RESET}
+  - This temporary token will be deleted when the session ends.
   - Test if the authentication works:
 {GREEN}  dropbox_backup_to_external_disk test{RESET}
 
@@ -329,34 +326,32 @@ fn print_help() {
     );
 }
 
-/// ask the user to paste the token interactively and temporarily store it encrypted
-fn ui_store_token() {
-    let ns_started = ns_start("ui_store_token");
-    // communicate errors to user here (if needed)
-    match ui_store_token_fallible() {
-        Ok(_) => println!("The token is temporarily stored."),
-        Err(err) => println!("{}", err),
+/// Ask the user to paste the token interactively and press Enter. Then calculate the master_key and the token_enc.
+/// I need to store the token somewhere because the CLI can be executed many times sequentially.
+/// The result of the function must be correct bash commands. They must be executed in the current shell and not in a sub-shell.
+/// This command should be executed with `eval $(dropbox_backup_to_external_disk encode_token)` to store the env var in the current shell.
+/// Similar to how works `eval $(ssh-agent)`
+fn ui_encode_token() {
+    // return bash commands because of eval$(...) or
+    // communicate errors to user - also as bash command because of eval$(...)
+    match ui_encode_token_fallible() {
+        Ok((master_key, token_enc)) => println!(
+            r#"
+export DBX_KEY_1={master_key}
+export DBX_KEY_2={token_enc}
+"#
+        ),
+        Err(err) => println!("echo {}", err),
     }
-    ns_print_ms("ui_store_token", ns_started);
 }
 
-/// ask the user to paste the token interactively and temporarily store it encrypted
-fn ui_store_token_fallible() -> Result<(), LibError> {
+/// This function can return an error. It is still a UI function because of the prompt.
+/// It is a separate function so I can use the `?` control flow.
+fn ui_encode_token_fallible() -> Result<(String, String), LibError> {
     //input secret token like password in command line
     let token = inquire::Password::new("").without_confirmation().prompt()?;
-    token_encode_and_store(token)?;
-    Ok(())
-}
-
-/// delete the file with the token
-fn ui_delete_token() {
-    let ns_started = ns_start("ui_delete_token");
-    // communicate errors to user here (if needed)
-    match token_delete() {
-        Ok(_) => println!("Token file deleted."),
-        Err(err) => println!("{}", err),
-    }
-    ns_print_ms("ui_delete_token", ns_started);
+    let (master_key, token_enc) = encode_token(token)?;
+    Ok((master_key, token_enc))
 }
 
 /// ui_test_connection
