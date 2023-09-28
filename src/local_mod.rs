@@ -1,5 +1,7 @@
 // local_mod.rs
+
 //! Module contains all functions for local external disk.
+
 /*
 #[allow(unused_imports)]
 use dropbox_content_hasher::DropboxContentHasher;

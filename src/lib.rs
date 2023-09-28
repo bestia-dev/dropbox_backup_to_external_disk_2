@@ -1,4 +1,4 @@
-//! dropbox_backup_to_external_disk lib.rs
+// dropbox_backup_to_external_disk/src/lib.rs
 
 // region: auto_md_to_doc_comments include README.md A //!
 //! # dropbox_backup_to_external_disk
@@ -203,70 +203,22 @@
 //!
 // endregion: auto_md_to_doc_comments include README.md A //!
 
+mod app_state_mod;
+mod crossterm_cli_mod;
+mod error_mod;
 mod local_mod;
+mod ratatui_mod;
 mod remote_mod;
 mod utils_mod;
 
-pub use local_mod::*;
-pub use remote_mod::*;
-pub use utils_mod::*;
+// export public code to the bin project
+pub use crate::app_state_mod::{AppStateTrait, APP_STATE};
+pub use crate::crossterm_cli_mod::*;
+pub use crate::error_mod::LibError;
+pub use crate::remote_mod::{encode_token, test_connection};
 
 #[allow(unused_imports)]
 use uncased::UncasedStr;
-
-/// This trait defines what functions must the bin project implement then the lib project can use them.  
-/// All IO must be defined inside the bin project: UI, env, file access.  
-/// That way the same lib project can be used from different bin: CLI, TUI, GUI, env, file, network,...  
-pub trait AppStateTrait: Sync + Send {
-    /// load keys from env
-    fn load_keys_from_io(&self) -> Result<(String, String), LibError>;
-    /// get first field
-    fn get_first_field(&self) -> String;
-    /// set first field
-    fn set_first_field(&mut self, value: String);
-}
-
-/// Global variable to store the Application state.  
-/// Global variables are so complicated in Rust.  
-/// Read more: https://www.sitepoint.com/rust-global-variables/  
-/// I will use Multi-threaded Global Variable with Runtime Initialization and Interior Mutability, the most complicated and usable one.  
-/// All fields are private. Only the methods can be used globally.  
-/// Example how to use it: APP_STATE.get().unwrap().lock().unwrap().get_first_field()  
-pub static APP_STATE: once_cell::sync::OnceCell<std::sync::Mutex<Box<dyn AppStateTrait>>> = once_cell::sync::OnceCell::new();
-
-/// list of possible errors from this library
-#[derive(thiserror::Error, Debug)]
-pub enum LibError {
-    #[error("VarError: {0}")]
-    VarError(#[from] std::env::VarError),
-
-    #[error("IoError: {0}")]
-    IoError(#[from] std::io::Error),
-
-    #[error("SerdeJsonError: {0}")]
-    SerdeJsonError(#[from] serde_json::Error),
-
-    #[error("DecryptionError: {0}")]
-    DecryptionError(#[from] fernet::DecryptionError),
-
-    #[error("FromUtf8Error: {0}")]
-    FromUtf8Error(#[from] std::string::FromUtf8Error),
-
-    #[error("DropboxError: {0}")]
-    DropboxError(#[from] dropbox_sdk::Error),
-    #[error("ListFolderError: {0}")]
-    ListFolderError(#[from] dropbox_sdk::files::ListFolderError),
-
-    #[error("InquireError: {0}")]
-    InquireError(#[from] inquire::InquireError),
-
-    #[error("ErrorFromString: {0}")]
-    ErrorFromString(String),
-    #[error("ErrorFromStaticStr: {0}")]
-    ErrorFromStr(&'static str),
-    #[error("unknown error")]
-    UnknownError,
-}
 
 pub struct AppConfig {
     pub path_list_base_local_path: &'static str,

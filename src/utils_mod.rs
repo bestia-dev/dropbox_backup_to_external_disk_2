@@ -1,20 +1,7 @@
 // utils_mod.rs
+
 //! A module with often used functions.
 
-/// ansi color
-pub const GREEN: crossterm::style::SetForegroundColor = crossterm::style::SetForegroundColor(crossterm::style::Color::Green);
-/// ansi color
-pub const YELLOW: crossterm::style::SetForegroundColor = crossterm::style::SetForegroundColor(crossterm::style::Color::Yellow);
-/// ansi color
-pub const RED: crossterm::style::SetForegroundColor = crossterm::style::SetForegroundColor(crossterm::style::Color::Red);
-/// ansi color reset
-pub const RESET: crossterm::style::ResetColor = crossterm::style::ResetColor;
-/// ansi attribute
-pub const BOLD: crossterm::style::SetAttribute = crossterm::style::SetAttribute(crossterm::style::Attribute::Bold);
-/// TODO: export this in a session env var
-pub const JUST_TO_AVOID_PLAIN_TEXT: &'static str = "J3a3esinyGxkSnG3mdi6-4uFFjD9bXGujs5bIzM8a6c=";
-/// env variable for encrypted token
-pub const ENV_DBX_TOKEN_ENC: &'static str = "DBX_TOKEN_ENC";
 /*
 use std::io::Read;
 use std::io::Stdout;
@@ -27,22 +14,6 @@ use termion::raw::RawTerminal;
 use uncased::UncasedStr;
 use unwrap::unwrap;
 
-lazy_static! {
-    /// ansi color
-    pub static ref GREEN: String = termion::color::Fg(termion::color::Green).to_string();
-    /// ansi color
-    pub static ref YELLOW: String = termion::color::Fg(termion::color::Yellow).to_string();
-    /// ansi color
-    pub static ref RED: String = termion::color::Fg(termion::color::Red).to_string();
-    /// ansi reset color
-    pub static ref RESET: String = termion::color::Fg(termion::color::Reset).to_string();
-    /// ansi clear line
-    pub static ref CLEAR_LINE: String = termion::clear::CurrentLine.to_string();
-    /// ansi clear all
-    pub static ref CLEAR_ALL: String = termion::clear::All.to_string();
-    /// ansi unhide cursor
-    pub static ref UNHIDE_CURSOR: String = termion::cursor::Show.to_string();
-}
 
 /// move cursor to line
 pub fn at_line(y: u16) -> String {
@@ -66,55 +37,7 @@ pub fn start_hide_cursor_terminal() -> termion::cursor::HideCursor<RawTerminal<S
     // return
     hide_cursor
 }
-*/
-/// returns the now in nanoseconds
-pub fn ns_start(text: &str) -> i64 {
-    // TODO: on drop could write/trace the time or just use tracing instead of this
-    let now = chrono::Utc::now();
-    if !text.is_empty() {
-        println!("{GREEN}{}: {text}{RESET}", &chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string());
-    }
-    now.timestamp_nanos()
-}
 
-/// returns the elapsed nanoseconds
-pub fn ns_elapsed(ns_start: i64) -> i64 {
-    let now_ns = chrono::Utc::now().timestamp_nanos();
-    let duration_ns = now_ns - ns_start;
-    // return
-    duration_ns
-}
-
-/// print elapsed time in milliseconds and returns the new now in nanoseconds
-pub fn ns_print_ms(name: &str, ns_start: i64) -> i64 {
-    // milliseconds
-    let duration_ns = ns_elapsed(ns_start) / 1_000_000;
-    if !name.is_empty() {
-        use num_format::{Locale, WriteFormatted};
-        let mut string_duration_ns = String::new();
-        string_duration_ns.write_formatted(&duration_ns, &Locale::en).unwrap();
-
-        println!("{GREEN}{:>15} ms: {name}{RESET}", string_duration_ns);
-    }
-    // return new now_ns
-    chrono::Utc::now().timestamp_nanos()
-}
-
-/// print elapsed time in nanoseconds and returns the new now in nanoseconds
-pub fn ns_print_ns(name: &str, ns_start: i64) -> i64 {
-    // milliseconds
-    let duration_ns = ns_elapsed(ns_start);
-    if !name.is_empty() {
-        use num_format::{Locale, WriteFormatted};
-        let mut string_duration_ns = String::new();
-        string_duration_ns.write_formatted(&duration_ns, &Locale::en).unwrap();
-
-        println!("{GREEN}{:>15} ns: {}{RESET}", string_duration_ns, name);
-    }
-    // return new now_ns
-    chrono::Utc::now().timestamp_nanos()
-}
-/*
 /// sort string lines case insensitive
 pub fn sort_string_lines(output_string: &str) -> String {
     let mut sorted_local: Vec<&str> = output_string.lines().collect();

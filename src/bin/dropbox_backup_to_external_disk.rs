@@ -1,10 +1,12 @@
-//! dropbox_backup_to_external_disk.rs
+// src/bin/dropbox_backup_to_external_disk.rs
 
-// All work with input/output should be inside the bin part of the Rust project, and nothing in the lib part.
+// CLI binary project around the library.
+// All work with input/output should be inside the bin project, and nothing in the lib project.
 // Inside bin I should print on the screen and open or create Files. Then pass the Files to the lib part to operate on them.
 // But to be interactive I cannot wait for a lib function to finish. The lib functions should be in another thread.
 // Then send msg to the bin main thread that print that to the screen.
 
+// use all of the lib project
 use dropbox_backup_to_external_disk::*;
 
 // define paths in bin, not in lib
@@ -55,8 +57,7 @@ fn main() -> anyhow::Result<()> {
     .expect("Error setting Ctrl-C handler"); */
 
     // init the global struct APP_STATE defined in the lib project
-    let bin_app_state = AppState { string_x: String::from("") };
-    let _ = APP_STATE.set(std::sync::Mutex::new(Box::new(bin_app_state)));
+    let _ = APP_STATE.set(std::sync::Mutex::new(Box::new(AppState { string_x: String::from("") })));
 
     //create the directory temp_data/
     std::fs::create_dir_all("temp_data").unwrap();

@@ -1,10 +1,12 @@
 // remote_mod.rs
+
 //! Module contains all the communication with the remote dropbox storage.
 
 use dropbox_sdk::default_client::UserAuthDefaultClient;
 use dropbox_sdk::files;
 
-use crate::*;
+use crate::app_state_mod::APP_STATE;
+use crate::error_mod::LibError;
 
 /// This is a short-lived token, so security is not my primary concern.
 /// But it is bad practice to store anything as plain text. I will encode it and store it in env var.
