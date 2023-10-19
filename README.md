@@ -36,8 +36,8 @@ The prototype CLI where I experimented with the Dropbox api is here: [dropbox_ba
 
 ## Development
 
-I need to have access to the external disk directory where the dropbox backup is and access to the dropbox.com.  
-I wrote a new bash script to create a podman pod for that and named it "pod_with_rust_vscode_for_dropbox".
+From inside the development container I need to have access to the external disk directory where the dropbox backup is and access to the dropbox.com.  
+I wrote a new bash script `rust_dev_pod_create.sh` to create a podman pod for this project and named it "pod_with_rust_vscode_for_dropbox".
 
 ## Open-source and free as a beer
 
