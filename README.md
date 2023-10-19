@@ -23,7 +23,21 @@ My projects on Github are more like a tutorial than a finished product: [bestia-
 
 The second version will have separated projects for [CLI](https://github.com/bestia-dev/dropbox_backup_to_external_disk_cli), [TUI](https://github.com/bestia-dev/dropbox_backup_to_external_disk_tui) and [GUI](https://github.com/bestia-dev/dropbox_backup_to_external_disk_gui) interfaces with a common [LIB](https://github.com/bestia-dev/dropbox_backup_to_external_disk_lib) project.  
 This is to show how the same library can be used from different user-interfaces.  
-The prototype CLI was [dropbox_backup_to_external_disk_1](https://github.com/bestia-dev/dropbox_backup_to_external_disk_1).  
+In Cargo.toml I can use the local path to define the dependency and that way I have always the newest code available:
+
+```toml
+[dependencies]
+dropbox_backup_to_external_disk_lib = { path = "../dropbox_backup_to_external_disk_lib" }
+```
+
+VSCode is so smart that for `Go to definition` it even opens the file from the library, so I can modify that. For editing it feels just like one project.  
+
+The prototype CLI where I experimented with the Dropbox api is here: [dropbox_backup_to_external_disk_1](https://github.com/bestia-dev/dropbox_backup_to_external_disk_1).  
+
+## Development
+
+I need to have access to the external disk directory where the dropbox backup is and access to the dropbox.com.  
+I wrote a new bash script to create a podman pod for that and named it "pod_with_rust_vscode_for_dropbox".
 
 ## Open-source and free as a beer
 
