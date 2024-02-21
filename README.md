@@ -9,12 +9,12 @@
 
 [//]: # (auto_cargo_toml_to_md end)
 
-![status](https://img.shields.io/badge/maintained-green) 
-![status](https://img.shields.io/badge/work_in_progress-yellow) 
+ ![maintained](https://img.shields.io/badge/maintained-green)
+ ![work_in_progress](https://img.shields.io/badge/work_in_progress-yellow)
 
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/blob/main/LICENSE)
-![Hits](https://bestia.dev/webpage_hit_counter/get_svg_image/584868797.svg)
+ [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/bestia-dev/dropbox_backup_to_external_disk_2/blob/main/LICENSE)
+ ![Hits](https://bestia.dev/webpage_hit_counter/get_svg_image/804435805.svg)
 
 Hashtags: #rustlang #tutorial #dropbox #cli #tui  
 My projects on Github are more like a tutorial than a finished product: [bestia-dev tutorials](https://github.com/bestia-dev/tutorials_rust_wasm).
