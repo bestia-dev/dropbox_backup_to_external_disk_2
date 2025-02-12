@@ -9,7 +9,7 @@
 
 [//]: # (auto_cargo_toml_to_md end)
 
- ![pre-alpha](https://img.shields.io/badge/pre_alpha-green)
+ ![pre-alpha](https://img.shields.io/badge/pre_alpha-red)
  ![work_in_progress](https://img.shields.io/badge/work_in_progress-yellow)
 
 
